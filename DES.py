@@ -1,9 +1,9 @@
 """
 Nom du TP : Sécurité et théorie de l'information
 
-Auteur : Jermiel Kpessou KOUNOUHO
+Auteurs : Jermiel Kpessou KOUNOUHO &
 
-Numéro étudiant : 12001045
+Numéros étudiants : 12001045 &
 
 Révision N° : Version 1
 
