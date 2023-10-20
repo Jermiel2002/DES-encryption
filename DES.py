@@ -7,7 +7,10 @@ Numéros étudiants : 12001045 &
 
 Révision N° : Version 1
 
+source : https://www.youtube.com/watch?v=nynAQ593HdU&list=PLBlnK6fEyqRiOCCDSdi6Ok_8PU2f_nkuf&index=3
 """
+import random
+
 # -----------------------------------------------------------------------------
 #
 #
@@ -25,12 +28,13 @@ from bitarray import bitarray
 #----------------------------------------------------
 #		Zone de déclaration des variables globales
 #----------------------------------------------------
-
+subkey1 = bitarray()
+subkey2 = bitarray()
 
 #-------------------------------------------------------
 #		Zone de déclaration des modules ou des fonctions
 #-------------------------------------------------------
-'''Fonction de génération de clé de 10 bits'''
+'''Fonction de génération de clé de 10 bits---------------------------------------------------'''
 
 def permute_key(key):
     taille = len(key)
@@ -54,6 +58,8 @@ def l_circular_shift(key_tuple):
     part2 = key_tuple[1]
     result_part1 = part1[1:] + part1[:1] #key[1:] = extrait a partir du bit à l'index 1 jusqu'à la fin
     result_part2 = part2[1:] + part2[:1]
+    #result_part1 = part1 << 1
+    #result_part2 = part2 << 1
     result = result_part1 + result_part2
     return result
 def l_circular_shift2(key):
@@ -70,6 +76,8 @@ def l_circular_shift2(key):
     part2 = key_tuple[1]
     result_part1 = part1[2:] + part1[:2] #key[2:] = extrait a partir du bit à l'index 2 jusqu'à la fin
     result_part2 = part2[2:] + part2[:2]
+    #result_part1 = part1 << 2
+    #result_part2 = part2 << 2
     result = result_part1 + result_part2
     return result
 def permute_keyP8(key):
@@ -81,7 +89,7 @@ def permute_keyP8(key):
         val_insert = bit_initial[permutation_seq[i]]
         bit_permutter.append(val_insert)
     return bit_permutter
-'''split_bitarray permet de diviser la clé de 10 bit en un tuple contenant deux bitarray
+'''split_bitarray permet de diviser la clé de n bit en un tuple contenant deux bitarray
 avec les 5 premiers et les 5 derniers bits'''
 def split_bitarray(key):
     n = len(key)
@@ -93,8 +101,12 @@ def split_bitarray(key):
     return (bitarray1,bitarray2)
 
 def generate_key():
-    bit_aleatoire = bitarray(10)
-    #print(bit_aleatoire)
+    #creer un bitarray vide
+    bit_aleatoire = bitarray()
+    #remplir le bitarray avec des valeurs aléatoires (0 ou 1)
+    for _ in range (10):
+        bit_aleatoire.append(random.choice([0,1]))
+    print(bit_aleatoire)
     '''On va permutter le bit aleatoire créer; bit_permute contient l'array de la clé permuter'''
     bit_permute = permute_key(bit_aleatoire)
 
@@ -112,11 +124,127 @@ def generate_key():
     rotation2 = l_circular_shift2(rotation1)
     key2 = permute_keyP8(rotation2)
     return (key1,key2)
+'''--------------------------------------------------------------------------------------------------------------------'''
+
+'''Fonction S-DES encryption
+The initial Permutation is going to take 8 bit block of plaintext, and is going to make a permutation and
+going to output another 8 bit block
+'''
+'''Permutation initiale'''
+def initial_permutationIP(plaintext):
+    taille = len(plaintext)
+    block1 = bitarray()
+    permutation_seq = [1,5,2,0,3,7,4,6]
+    for i in range(taille):
+        val_insert = plaintext[permutation_seq[i]]
+        block1.append(val_insert)
+    return block1
+
+def expansion_permutation(block):
+    right_half1 = bitarray()
+    permutation_seq = [3,0,1,2,1,2,3,0]
+    taille = len(permutation_seq)
+    for i in range(taille):
+        val_insert = block[permutation_seq[i]]
+        right_half1.append(val_insert)
+    return right_half1
+
+def select_bits(part_of_4_bit,pos1,pos2):
+    #on selectione les positions desirée
+    bit_1 = part_of_4_bit[pos1]
+    bit_2 = part_of_4_bit[pos2]
+
+    #on crée une nouvelle bitarray en fusionnant les bits selectionnées
+    new_bitarray = bitarray()
+    new_bitarray.extend([bit_1,bit_2])
+
+    return new_bitarray
+
+'''Les S-box fonctionnenet comme suit : après l'opération XOR, les premiers et quatrième bits de chaque part sont
+traités comme un nombre de 2 bits qui spécifient une ligne du sbox. Les deuxième et troisième bits spécifient la colonne
+du sbox'''
+def s_box(part1,part2):
+    matrice_S0 = [[1,0,3,2],[3,2,1,0],[0,2,1,3],[3,1,3,2]]
+    matrice_S1 = [[0,1,2,3],[2,0,1,3],[3,0,1,0],[2,1,0,3]]
+    #premiers 4 bits
+    POP3_elmt1 = select_bits(part1,0,3)
+    P1P2_elmt1 = select_bits(part1,1,2)
+    #on converti en entier les resultats
+    ligne1 = int(POP3_elmt1.to01(),2)
+    colonne1 = int(P1P2_elmt1.to01(),2)
+    #On renvoie la valeur de l'élement correspondant à la ligne et à la colonne dans le sbox
+    first_elmt = matrice_S0[ligne1][colonne1]
+
+    #deuxième 4 bits
+    POP3_elmt2 = select_bits(part2,0,3)
+    P1P2_elmt2 = select_bits(part2,1,2)
+    #on converti en entier les resultats
+    ligne2 = int(POP3_elmt2.to01(),2)
+    colonne2 = int(P1P2_elmt2.to01(),2)
+    #On renvoie la valeur de l'élement correspondant à la ligne et à la colonne dans le sbox
+    snd_elmt = matrice_S1[ligne2][colonne2]
+
+    #on converti first_elmt et snd_elmt en binaire et après on les fusionnes
+    convert_first = bin(first_elmt)[2:] #[2:] pour enlever le préfixe 'Ob' du resultat
+    bin_first = bitarray(convert_first)
+    convert_snd = bin(snd_elmt)[2:]
+    bin_snd = bitarray(convert_snd)
+    fusion = bitarray()
+    fusion.extend([bin_first,bin_snd])
+    return fusion
+
+def permutation_mangler(block):
+    taille = len(block)
+    bit_permutter = bitarray()
+    permutation_seq = [1,3,2,0]
+    for i in range(taille):
+        val_insert = block[permutation_seq[i]]
+        bit_permutter.append(val_insert)
+    return bit_permutter
+'''La fonction est ci-dessous prend en entrée le rendu du processus de permutation
+initial. Il divise ce rendu en deux moitié Left_half et right_half. le right_half va subir une fonction F
+qu'on appelé la fonction de Mangler. cette dernieère prendre en paramètre le right_half et la première sous clé'''
+def fonktionFk(output_of_IP):
+    split_IP = split_bitarray(output_of_IP)
+    left_half =  split_IP[0]
+    right_half = split_IP[1]
+    #right_half1 contient la première operation E/P sur le sous block droit. on obtient 8 bits
+    right_half1 = expansion_permutation(right_half)
+    #On fait un ou exclusive du right_half1 avec la sous clé 1 de 8 bits
+    result_xor = right_half1 ^ subkey1
+
+    #le resultat du xor passe au s-box maintenant. les 4 premiers bits sont introduits dans la boite S0
+    #pour produire une sortie de 2 bits et les 4 autres restants sont introduit dans S1 pour produire une
+    #autre sortie de 2 bits
+    part1_of_xor = result_xor[:4]
+    part2_of_xor = result_xor[4:]
+    result_sbox = s_box(part1_of_xor,part2_of_xor)
+    res_final = permutation_mangler(result_sbox)
+
+    #pour le left_half, on appel la fonction switch
+    return res_final
+
+'''Permutation final'''
+def final_permutationIP(plaintext):
+    taille = len(plaintext)
+    block_end = bitarray()
+    permutation_seq = [3,0,2,4,6,1,7,5]
+    for i in range(taille):
+        val_insert = plaintext[permutation_seq[i]]
+        block_end.append(val_insert)
+    return block_end
+
+
 #-------------------------------------------------------
 #						Appel fonctions
 #-------------------------------------------------------
-cle = generate_key()
-print("voici les deux sous clé : ", cle)
+'''Génération des deux sous clés indispensables pour le cryptage'''
+subkey = generate_key()
+# on sauvegarde les sous clés
+subkey1 = subkey[0]
+subkey2 = subkey[1]
+#print("voici les deux sous clé : ", cle)
+#print("\nIP permutation",initial_permutationIP(bitarray('10100110')))
 
 ''' exemple avec le bitarray dans le pdf explication du s-des
 a = split_bitarray(bitarray('1000001100'))
@@ -127,3 +255,4 @@ c = permute_keyP8(b)
 print(c)
 d = l_circular_shift2(b)
 print(d)'''
+
