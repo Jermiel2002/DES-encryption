@@ -36,6 +36,8 @@ subkey2 = bitarray()
 #-------------------------------------------------------
 '''Fonction de génération de clé de 10 bits---------------------------------------------------'''
 
+'''Première permutation de la clé de 10 bits généré. Chaque chiffre dans le tableau donne la position du bit à récupérer
+et l'indice de ce chiffre dans le tableau indique la position du bit après permutation'''
 def permute_key(key):
     taille = len(key)
     bit_permutter = bitarray()
@@ -45,6 +47,8 @@ def permute_key(key):
         bit_permutter.append(val_insert)
     return bit_permutter
 
+'''Après permutation on effectue un décalage gauche de 1 séparement : sur les premiers 5 bits
+et sur les derniers 5 bits'''
 def l_circular_shift(key_tuple):
     '''Explication du principe du left circular shift
     Pour effectuer un décalage circulaire vers la gauche d'un nombre binaire 10000 de manière à obtenir 00001,
@@ -58,10 +62,24 @@ def l_circular_shift(key_tuple):
     part2 = key_tuple[1]
     result_part1 = part1[1:] + part1[:1] #key[1:] = extrait a partir du bit à l'index 1 jusqu'à la fin
     result_part2 = part2[1:] + part2[:1]
-    #result_part1 = part1 << 1
+    #result_part1 = part1 << 1 #ici normalement on doit utilisé le symbole de decalage mais quand je l'utilise
+    #j'obtiens vite un set de 0. On a l'impression python fais mal le décalage
     #result_part2 = part2 << 1
     result = result_part1 + result_part2
     return result
+
+'''On refait ensuite une nouvelle permutation appelé P8 qui sélectionne et permute 8 bits
+sur les 10 renvoyé précedemment. Le résultat renvoyé est la clé 1'''
+def permute_keyP8(key):
+    bit_initial = key
+    bit_permutter = bitarray()
+    permutation_seq = [5,2,6,3,7,4,9,8]
+    taille = len(permutation_seq)
+    for i in range (taille):
+        val_insert = bit_initial[permutation_seq[i]]
+        bit_permutter.append(val_insert)
+    return bit_permutter
+
 def l_circular_shift2(key):
     '''Explication du principe du left circular shift
     Pour effectuer un décalage circulaire vers la gauche d'un nombre binaire 10000 de manière à obtenir 00001,
@@ -80,15 +98,7 @@ def l_circular_shift2(key):
     #result_part2 = part2 << 2
     result = result_part1 + result_part2
     return result
-def permute_keyP8(key):
-    bit_initial = key
-    bit_permutter = bitarray()
-    permutation_seq = [5,2,6,3,7,4,9,8]
-    taille = len(permutation_seq)
-    for i in range (taille):
-        val_insert = bit_initial[permutation_seq[i]]
-        bit_permutter.append(val_insert)
-    return bit_permutter
+
 '''split_bitarray permet de diviser la clé de n bit en un tuple contenant deux bitarray
 avec les 5 premiers et les 5 derniers bits'''
 def split_bitarray(key):
@@ -99,14 +109,16 @@ def split_bitarray(key):
     bitarray1 = key[:milieu]
     bitarray2 = key[milieu:]
     return (bitarray1,bitarray2)
-
+#--------------------------------------------------------------------------------------
 def generate_key():
     #creer un bitarray vide
     bit_aleatoire = bitarray()
+
     #remplir le bitarray avec des valeurs aléatoires (0 ou 1)
     for _ in range (10):
         bit_aleatoire.append(random.choice([0,1]))
-    print(bit_aleatoire)
+    print("La clé de 10 bits aléatoires générées est : ",bit_aleatoire)
+
     '''On va permutter le bit aleatoire créer; bit_permute contient l'array de la clé permuter'''
     bit_permute = permute_key(bit_aleatoire)
 
@@ -114,7 +126,7 @@ def generate_key():
        encore appelé rotation.
        Cette opération sera faite séparement : sur les 5 premiers bits et sur les 5 autres'''
     first_last5_bit = split_bitarray(bit_permute) #renvoie un tuple de bitarray, l'un contient les premières cinq element et l'autre les 5 dernières
-    rotation1 = l_circular_shift(first_last5_bit) #on effectue l'opération de decalage sur chaque tuple et return les 10 bits
+    rotation1 = l_circular_shift(first_last5_bit) #on effectue l'opération de decalage sur chaque élément de notre tuple et return les 10 bits
 
     '''On effectue une autre permutation et on a la première sous clé'''
     key1 = permute_keyP8(rotation1)
@@ -123,29 +135,37 @@ def generate_key():
     sur le resultat obtenu du dernier décalage'''
     rotation2 = l_circular_shift2(rotation1)
     key2 = permute_keyP8(rotation2)
-    return (key1,key2)
-'''--------------------------------------------------------------------------------------------------------------------'''
 
-'''Fonction S-DES encryption
-The initial Permutation is going to take 8 bit block of plaintext, and is going to make a permutation and
-going to output another 8 bit block
+    return (key1,key2)
+
+#---------------------------------------------------------------------------------
+
+#----------------Sous fonctions utiles--------------------
+
+#---------------------------------------------------------
+#deroulement du chiffremement
+'''
+    Fonction S-DES encryption 
+    The initial Permutation is going to take 8 bit block of plaintext, and is going to make a permutation and
+    going to output another 8 bit block
 '''
 '''Permutation initiale'''
-def initial_permutationIP(plaintext):
+def initial_permutation_ip(plaintext):
     taille = len(plaintext)
     block1 = bitarray()
-    permutation_seq = [1,5,2,0,3,7,4,6]
+    permutation_seq = [1, 5, 2, 0, 3, 7, 4, 6]
     for i in range(taille):
         val_insert = plaintext[permutation_seq[i]]
         block1.append(val_insert)
     return block1
 
 def expansion_permutation(block):
+    print("verif du block : ", block)
     right_half1 = bitarray()
     permutation_seq = [3,0,1,2,1,2,3,0]
-    taille = len(permutation_seq)
-    for i in range(taille):
-        val_insert = block[permutation_seq[i]]
+    #taille = len(permutation_seq)
+    for i in permutation_seq:
+        val_insert = block[i]
         right_half1.append(val_insert)
     return right_half1
 
@@ -184,31 +204,37 @@ def s_box(part1,part2):
     #On renvoie la valeur de l'élement correspondant à la ligne et à la colonne dans le sbox
     snd_elmt = matrice_S1[ligne2][colonne2]
 
-    #on converti first_elmt et snd_elmt en binaire et après on les fusionnes
+    '''#on converti first_elmt et snd_elmt en binaire et après on les fusionnes
     convert_first = bin(first_elmt)[2:] #[2:] pour enlever le préfixe 'Ob' du resultat
     bin_first = bitarray(convert_first)
     convert_snd = bin(snd_elmt)[2:]
     bin_snd = bitarray(convert_snd)
     fusion = bitarray()
     fusion.extend([bin_first,bin_snd])
-    return fusion
-
+    return fusion'''
+    fusion = first_elmt + snd_elmt
+    # on converti le resultat de la fusion en binaire de longueur 4
+    fusion_bin = bin(fusion)[2:]
+    fusion_bin = fusion_bin.zfill(4)
+    return fusion_bin
 def permutation_mangler(block):
     taille = len(block)
+    block_useable = bitarray(block)
+    #print(type(block))
     bit_permutter = bitarray()
     permutation_seq = [1,3,2,0]
     for i in range(taille):
-        val_insert = block[permutation_seq[i]]
+        val_insert = block_useable[permutation_seq[i]]
         bit_permutter.append(val_insert)
     return bit_permutter
-'''La fonction ci-dessous prend en entrée le rendu du processus de permutation
-initial. Il divise ce rendu en deux moitié Left_half et right_half. le right_half va subir une fonction F
-qu'on appelé la fonction de Mangler. cette dernieère prendre en paramètre le right_half et la première sous clé'''
-def fonktionF(right_half):
+
+def fonktionF(right_half,key):
     #right_half1 contient la première operation E/P sur le sous block droit. on obtient 8 bits
-    right_half1 = expansion_permutation(right_half[:4])
+
+    right_half1 = expansion_permutation(right_half[1])
+
     #On fait un ou exclusive du right_half1 avec la sous clé 1 de 8 bits
-    result_xor = right_half1 ^ subkey1
+    result_xor = right_half1 ^ key
 
     #le resultat du xor passe au s-box maintenant. les 4 premiers bits sont introduits dans la boite S0
     #pour produire une sortie de 2 bits et les 4 autres restants sont introduit dans S1 pour produire une
@@ -221,13 +247,22 @@ def fonktionF(right_half):
     #pour le left_half, on appel la fonction switch
     return res_final
 
-def fonktionFk(output_of_ip):
+'''La fonction Fk combine la permutation et la substitution'''
+def fonktionFk(output_of_ip,key):
     split_ip = split_bitarray(output_of_ip)
     left_half = split_ip[0]
     right_half = split_ip[1]
-    machine_f = left_half ^ fonktionF(right_half)
+    machine_f_int = left_half ^ fonktionF(bitarray(right_half),key)
+
+    machine_f = bitarray(bin(machine_f_int)[2:].zfill(4))
     return (machine_f, right_half)
 
+'''La fonction Fk n'a opérer que sur les 4 bits les plus à gauche. le switch va échanger les 4 bits à gauche
+contre les 4 à droites. Ainsi la seconde instance de Fk (les 4 bits les plus à droite), sera différent. On relance ici 
+fk après avoir interchangé les bits'''
+def switch(output_of_fonktionFk):
+    echange_4_bits_L_R = (output_of_fonktionFk[1],output_of_fonktionFk[0])
+    return echange_4_bits_L_R
 
 '''Permutation final'''
 def final_permutationIP(plaintext):
@@ -238,39 +273,31 @@ def final_permutationIP(plaintext):
         val_insert = plaintext[permutation_seq[i]]
         block_end.append(val_insert)
     return block_end
-
-
 #-------------------------------------------------------
 #						Appel fonctions
 #-------------------------------------------------------
 
 if __name__ == "__main__":
-    #entrer du message à chiffrer
-    plaintext_original = bitarray('10010110')
+    print("\n\n--------------------Bienvenue dans l'univers du chiffrement SDES--------------------\n")
+    clé = generate_key()
+    subkey1 = clé[0]
+    subkey2 = clé[1]
+    print("\nla première sous-clés obtenue est : \n",subkey1)
+    print("\nla deuxième sous-clés obtenue est : \n",subkey2)
 
-    #Generer la clé de chiffrement
-    subkey = generate_key()
-    subkey1 = subkey[0]
-    subkey2 = subkey[1]
-
-    #plaintext subit une première permutation
-    stage1 = initial_permutationIP(plaintext_original)
-
-    #Le resultat de la permutation est utilisé pour la fonction F
-    stage2 = fonktionFk(stage1)
-    print(stage2)
-
-
+    plaintext = input("Maintenant passons au chiffrement ! Quel est votre message (8 bits): \n")
+    plaintext_useable = bitarray(plaintext)
+    print("Votre message est : ", plaintext_useable)
+    a = fonktionFk(plaintext_useable,subkey1)
+    print("les 4 bits les plus à gauche et les 4 à droite : ",a)
+    #b = switch(a,subkey1)
+    b = switch(a)
+    print("voilà le switch : ", b)
+    #après le switch on refais la fonction fk mais avec la deuxième clé
+    c = fonktionFk(b,subkey2)
+    print("on a refait fonktionFk après le switch : ", c)
 
 
+    #message_chiffrer = final_permutationIP(c)
 
-''' exemple avec le bitarray dans le pdf explication du s-des
-a = split_bitarray(bitarray('1000001100'))
-print(a)
-b = l_circular_shift(a)
-print(b)
-c = permute_keyP8(b)
-print(c)
-d = l_circular_shift2(b)
-print(d)'''
-
+    #print("voici votre message chiffrer : ", message_chiffrer)
