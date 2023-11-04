@@ -10,6 +10,7 @@ Révision N° : Version 1
 source : https://www.youtube.com/watch?v=nynAQ593HdU&list=PLBlnK6fEyqRiOCCDSdi6Ok_8PU2f_nkuf&index=3
 """
 import random
+import time
 
 # -----------------------------------------------------------------------------
 #
@@ -302,8 +303,8 @@ def fonktionFk(output_of_ip, key):
     split_ip = split_bitarray(output_of_ip)
     left_half = split_ip[0]
     right_half = split_ip[1]
-    print("le right bizarre : ", right_half)
-    print("pourtant le split_ip donne : ", split_ip)
+    #print("le right bizarre : ", right_half)
+    #print("pourtant le split_ip donne : ", split_ip)
     machine_f = left_half ^ fonktionF(right_half, key)
     return (machine_f, right_half)
 
@@ -340,18 +341,24 @@ if __name__ == "__main__":
     clé = generate_key()
     subkey1 = clé[0]
     subkey2 = clé[1]
-    print("\nla première sous-clés obtenue est : \n", subkey1)
-    print("\nla deuxième sous-clés obtenue est : \n", subkey2)
+    #print("\nla première sous-clés obtenue est : \n", subkey1)
+    #print("\nla deuxième sous-clés obtenue est : \n", subkey2)
 
-    plaintext = input("Maintenant passons au chiffrement ! Quel est votre message (8 bits): \n")
+    plaintext = input("Quel est votre message (8 bits): ")
     plaintext_useable = bitarray(plaintext)
-    print("Votre message est : ", plaintext_useable)
+    print("\nVotre message est : ", plaintext_useable)
     a = fonktionFk(plaintext_useable, subkey1)
-    print("les 4 bits les plus à gauche : ", a)
+    #print("les 4 bits les plus à gauche : ", a)
     b = switch(a)
-    print("le switch donne : ", b)
-    #c = fonktionFk(b, subkey2)
-
-    #message_chiffrer = final_permutationIP(c)
-
-    #print("voici votre message chiffrer : ", message_chiffrer)
+    #print("le switch donne : ", b)
+    c = bitarray(b[0]+b[1])
+    #print("prêt à envoyer : ", c)
+    d = fonktionFk(c, subkey2)
+    #print("la deuxième application donne : ", d)
+    #on converti le resultat en un seul bit array
+    e = bitarray(d[0]+d[1])
+    #on fait une permutation finale sur d
+    message  = final_permutationIP(e)
+    print("Croyez-y et laissez la magie opèrer...")
+    time.sleep(2)
+    print("Bim bam boum ! voici le message chiffrer : ", message)
