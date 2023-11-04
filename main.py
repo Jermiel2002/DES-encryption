@@ -26,20 +26,20 @@ import key_industry
 import encryption
 
 if __name__ == "__main__":
-    print("\n\n--------------------Bienvenue dans l'univers du chiffrement SDES--------------------\n")
+    print("\n\n--------------------------------------Bienvenue dans l'univers du chiffrement SDES--------------------------------------\n")
     clé = key_industry.generate_key()
-    print("\n$Pour commencer on va utiliser la clé suivante pour le chiffrement et le déchiffrement$ : ",clé)
+    #print("\n$Pour commencer on va utiliser la clé suivante pour le chiffrement et le déchiffrement$ : ",clé)
     subkey1 = clé[0]
     subkey2 = clé[1]
     print("\n_______________A partir de cette clé, on va générée deux sous clé_______________\n")
-    print("\nla première sous-clés obtenue est : \n", subkey1)
+    print("la première sous-clés obtenue est : \n", subkey1)
     print("\nla deuxième sous-clés obtenue est : \n", subkey2)
 
     action = None
 
     while action not in [1, 2]:
         try:
-            action = int(input("Que voulez vous faire ?\n Entrer 1 pour le chiffrement\n Entrer 2 pour le déchiffrement \nAlors ? : "))
+            action = int(input("\nQue voulez vous faire ?\n Entrer 1 pour le chiffrement\n Entrer 2 pour le déchiffrement \nAlors ? : "))
             if action not in [1, 2]:
                 print("Choix invalide. Veuillez entrer 1 ou 2.")
         except ValueError:
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         print("Croyez-y et laissez la magie opèrer...")
         time.sleep(2)
         print("Bim bam boum ! voici le message chiffrer : ", message)
-    elif (action == 2):
+    else:
         print("\n**************Bienvenue ! Je vais vous aider à déchiffrer votre message**************\n")
         plaintext = input("Quel est le message chiffré (8 bits): ")
         plaintext_useable = bitarray(plaintext)

@@ -26,22 +26,29 @@ import key_industry
 # ----------------------------------------------------
 #		Zone de déclaration des variables globales
 # ----------------------------------------------------
-
+# Définissez les matrices S0 et S1 en dehors de la fonction
+matrice_S0 = [[1, 0, 3, 2], [3, 2, 1, 0], [0, 2, 1, 3], [3, 1, 3, 2]]
+matrice_S1 = [[0, 1, 2, 3], [2, 0, 1, 3], [3, 0, 1, 0], [2, 1, 0, 3]]
 
 # -------------------------------------------------------
 #		Zone de déclaration des modules ou des fonctions
 # -------------------------------------------------------
 
 '''split_bitarray permet de diviser la clé de n bit en un tuple contenant deux bitarray
-avec les 5 premiers et les 5 derniers bits'''
+avec les 5 premiers et les 5 derniers bits
+--> J'ai également modifié la fonction pour qu'elle renvoie directement des instances de bitarray 
+en convertissant les tranches bitarray1 et bitarray2. Cela améliore la lisibilité du code et garantit que les sorties sont bien des bitarray.'''
 def split_bitarray(key):
     n = len(key)
+
     if n % 2 != 0:
         raise ValueError("La taille du bitarray doit être un multiple de 2.")
+
     milieu = n // 2
     bitarray1 = key[:milieu]
     bitarray2 = key[milieu:]
-    return (bitarray1, bitarray2)
+
+    return bitarray(bitarray1), bitarray(bitarray2)
 
 # ---------------------------------------------------------------------------------
 
@@ -58,97 +65,52 @@ def split_bitarray(key):
 
 
 def initial_permutation_ip(plaintext):
-    taille = len(plaintext)
-    block1 = bitarray()
     permutation_seq = [1, 5, 2, 0, 3, 7, 4, 6]
-    for i in range(taille):
-        val_insert = plaintext[permutation_seq[i]]
-        block1.append(val_insert)
+    block1 = bitarray(plaintext[i] for i in permutation_seq)
     return block1
 
-
+'''Cette version utilise une compréhension de liste pour créer right_half1 en utilisant la séquence de permutation 
+permutation_seq, ce qui simplifie le code et le rend plus cohérent'''
 def expansion_permutation(block):
     permutation_seq = (3, 0, 1, 2, 1, 2, 3, 0)
 
     if len(block) != 4:
         raise ValueError("La taille de 'block' doit être de 4 bits.")
 
-    right_half1 = bitarray()
-
-    for i in permutation_seq:
-        val_insert = block[i]
-        right_half1.append(val_insert)
+    right_half1 = bitarray(block[i] for i in permutation_seq)
 
     return right_half1
 
-
-'''def expansion_permutation(block):
-    block_useable = list(block)
-    print(type(block_useable))
-    #block_useable = bitarray(block)
-    permutation_seq = (3, 0, 1, 2, 1, 2, 3, 0)
-    right_half1 = bitarray()
-
-    for i in permutation_seq:
-        #print(type(block[i]))
-        val_insert = block_useable[i]
-        right_half1.append(val_insert)
-
-    return right_half1'''
-
-
+'''Bien que notre ancienne version soit correcte, cette version utilise une liste selected_bits pour stocker 
+les bits sélectionnés, puis les convertit en une bitarray. Juste deux lignes de codes'''
 def select_bits(part_of_4_bit, pos1, pos2):
-    # on selectione les positions desirée
-    bit_1 = part_of_4_bit[pos1]
-    bit_2 = part_of_4_bit[pos2]
+    # Sélectionnez les bits aux positions désirées
+    selected_bits = [part_of_4_bit[pos1], part_of_4_bit[pos2]]
 
-    # on crée une nouvelle bitarray en fusionnant les bits selectionnées
-    new_bitarray = bitarray()
-    new_bitarray.extend([bit_1, bit_2])
+    # Créez une nouvelle bitarray en utilisant les bits sélectionnés
+    new_bitarray = bitarray(selected_bits)
 
     return new_bitarray
 
 
 '''Les S-box fonctionnenet comme suit : après l'opération XOR, les premiers et quatrième bits de chaque part sont
 traités comme un nombre de 2 bits qui spécifient une ligne du sbox. Les deuxième et troisième bits spécifient la colonne
-du sbox'''
-
+du sbox
+--> Cette version améliore la lisibilité et la maintenabilité du code. En ce qui concerne sa complexité, cest exactement
+la même que celle dune opération de recherche de table. On utilise utilise des S-box de 4x4, ce qui signifie qu'il y a 16 valeurs dans chaque S-box. 
+Par conséquent, la complexité de l'opération S-box est constante, O(1), car elle implique simplement la recherche d'une valeur dans une petite table de substitution.'''
 
 def s_box(part1, part2):
-    matrice_S0 = [[1, 0, 3, 2], [3, 2, 1, 0], [0, 2, 1, 3], [3, 1, 3, 2]]
-    matrice_S1 = [[0, 1, 2, 3], [2, 0, 1, 3], [3, 0, 1, 0], [2, 1, 0, 3]]
-    # premiers 4 bits
-    POP3_elmt1 = select_bits(part1, 0, 3)
-    P1P2_elmt1 = select_bits(part1, 1, 2)
-    # on converti en entier les resultats
-    ligne1 = int(POP3_elmt1.to01(), 2)
-    colonne1 = int(P1P2_elmt1.to01(), 2)
-    # On renvoie la valeur de l'élement correspondant à la ligne et à la colonne dans le sbox
-    first_elmt = matrice_S0[ligne1][colonne1]
+    result = ""
 
-    # deuxième 4 bits
-    POP3_elmt2 = select_bits(part2, 0, 3)
-    P1P2_elmt2 = select_bits(part2, 1, 2)
-    # on converti en entier les resultats
-    ligne2 = int(POP3_elmt2.to01(), 2)
-    colonne2 = int(P1P2_elmt2.to01(), 2)
-    # On renvoie la valeur de l'élement correspondant à la ligne et à la colonne dans le sbox
-    snd_elmt = matrice_S1[ligne2][colonne2]
+    for part in [part1, part2]:
+        # Premiers 4 bits
+        ligne = int(part[:1].to01(), 2)
+        colonne = int(part[1:3].to01(), 2)
+        s_box_value = matrice_S0 if part is part1 else matrice_S1
+        result += format(s_box_value[ligne][colonne], '02b')  # Format en binaire de longueur 2
 
-    '''#on converti first_elmt et snd_elmt en binaire et après on les fusionnes
-    convert_first = bin(first_elmt)[2:] #[2:] pour enlever le préfixe 'Ob' du resultat
-    bin_first = bitarray(convert_first)
-    convert_snd = bin(snd_elmt)[2:]
-    bin_snd = bitarray(convert_snd)
-    fusion = bitarray()
-    fusion.extend([bin_first,bin_snd])
-    return fusion'''
-    fusion = first_elmt + snd_elmt
-    # on converti le resultat de la fusion en binaire de longueur 4
-    fusion_bin = bin(fusion)[2:]
-    fusion_bin = fusion_bin.zfill(4)
-    return fusion_bin
-
+    return result
 
 def permutation_mangler(block):
     taille = len(block)
@@ -160,7 +122,6 @@ def permutation_mangler(block):
         val_insert = block_useable[permutation_seq[i]]
         bit_permutter.append(val_insert)
     return bit_permutter
-
 
 def fonktionF(right_half, key):
     # print("beljdj",right_half)
@@ -209,12 +170,8 @@ def switch(output_of_fonktionFk):
 
 
 def final_permutationIP(plaintext):
-    taille = len(plaintext)
-    block_end = bitarray()
     permutation_seq = [3, 0, 2, 4, 6, 1, 7, 5]
-    for i in range(taille):
-        val_insert = plaintext[permutation_seq[i]]
-        block_end.append(val_insert)
+    block_end = bitarray(plaintext[i] for i in permutation_seq)
     return block_end
 
 
