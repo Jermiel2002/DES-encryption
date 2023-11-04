@@ -203,6 +203,6 @@ if __name__ == "__main__":
     e = bitarray(d[0]+d[1])
     #on fait une permutation finale sur d
     message  = final_permutationIP(e)
-    print("Croyez-y et laissez la magie opèrer...")
+    print("Croyez-y et laissez la magie opérer...")
     time.sleep(2)
     print("Bim bam boum ! voici le message chiffrer : ", message)
