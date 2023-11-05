@@ -1,103 +1,79 @@
-#!/usr/bin/env python
-# import the bitarray from the module bitarrray
+"""
+Nom du TP : Sécurité et théorie de l'information
+
+Auteurs : Jermiel Kpessou KOUNOUHO & Mohammed Ibrahim DJIBRILA
+
+Numéros étudiants : 12001045 & 12313574
+
+source : https://www.youtube.com/watch?v=nynAQ593HdU&list=PLBlnK6fEyqRiOCCDSdi6Ok_8PU2f_nkuf&index=3
+"""
+# -----------------------------------------------------------------------------
+#
+#
+# -----------------------------------------------------------------------------
+
+
+################################################
+#				Programme principal
+################################################
+
+# -----------------------------------------------
+#		    Zone des 'imports' de modules
+# -----------------------------------------------
 from bitarray import bitarray
-
-
-def encryption(data, key):
-    if len(data) != 8 or len(key) != 10:
-        return "La taille du message doit être de 8 bits et la clé de 10 bits."
-
-    # Étape de permutation initiale
-    data = permutation_initiale(data)
-
-    # Diviser les données en deux moitiés de 4 bits
-    middle = len(data) // 2
-    left = data[:middle]
-    right = data[middle:]
-
-    # Appliquer 2 tours de substitution et permutation
-    for _ in range(2):
-        temp = right.copy()
-        right = left ^ fonction_F(right, key)
-        left = temp
-
-    # Réassembler les moitiés
-    data_chiffre = left + right
-
-    # Appliquer une permutation inverse
-    data_chiffre = permutation(data_chiffre)
-
-    return data_chiffre
-
-
-def decryption(data_chiffre, key):
-    if len(data_chiffre) != 8 or len(key) != 10:
-        return "La taille du message chiffré doit être de 8 bits et la clé de 10 bits."
-
-    # Étape de permutation initiale inverse
-    data_chiffre = permutation(data_chiffre, permutation_inverse)
-
-    # Diviser les données chiffrées en deux moitiés de 4 bits
-    middle = len(data_chiffre) // 2
-    left = data_chiffre[:middle]
-    right = data_chiffre[middle:]
-
-    # Appliquer 2 tours de substitution et permutation en sens inverse
-    for _ in range(2):
-        temp = left.copy()
-        left = right ^ fonction_F(left, key)
-        right = temp
-
-    # Réassembler les moitiés
-    data_dechiffre = left + right
-
-    # Appliquer une permutation initiale
-    data_dechiffre = permutation(data_dechiffre, permutation_initiale)
-
-    return data_dechiffre
-
-
-# Tables de permutation initiale et inverse
-permutation_initiale = [2, 6, 3, 1, 4, 8, 5, 7]
-permutation_inverse = [4, 1, 3, 5, 7, 2, 8, 6]
-
-# Table de substitution (S-box) - vous pouvez définir vos propres valeurs
-s_box = [
-    [14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7],
-    [0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8]
-]
-
-
-def permutation(data, table):
-    return bitarray([data[i] for i in table])
-
-
-def substitution(data, s_box):
-    result = bitarray()
-    for i in range(0, len(data), 4):
-        chunk = data[i:i + 4]
-        row = int(chunk[0] + chunk[3], 2)
-        col = int(chunk[1:3], 2)
-        result += bitarray(bin(s_box[row][col])[2:].zfill(4))
-    return result
-
-
-def fonction_F(data, key):
-    # Étape de substitution
-    data = substitution(data)
-
-    # Étape de permutation
-    data = permutation(data)
-
-    # XOR avec la clé
-    data ^= key
-
-    return data
-
+import time
+import key_industry
+import encryption
 
 if __name__ == "__main__":
-    message = bitarray(8)  # Message de 8 bits
-    key = bitarray(10)  # Clé de 10 bits
 
-    # message_chiffre = chiffrement_DES(message, key)
-    # print("Données chiffrées:", message_chiffre)
+    subkeys = key_industry.generate_key()
+
+    # print(subkeys)
+
+
+
+    # print("\n\n--------------------------------------Bienvenue dans l'univers du chiffrement SDES--------------------------------------\n")
+    # clé = key_industry.generate_key()
+    # #print("\n$Pour commencer on va utiliser la clé suivante pour le chiffrement et le déchiffrement$ : ",clé)
+    # subkey1 = clé[0]
+    # subkey2 = clé[1]
+    # print("\n_______________A partir de cette clé, on va générée deux sous clé_______________\n")
+    # print("la première sous-clés obtenue est : \n", subkey1)
+    # print("\nla deuxième sous-clés obtenue est : \n", subkey2)
+
+    # action = None
+
+    # while action not in [1, 2]:
+    #     try:
+    #         action = int(input("\nQue voulez vous faire ?\n Entrez 1 pour le chiffrement\n Entrez 2 pour le déchiffrement \nAlors ? : "))
+    #         if action not in [1, 2]:
+    #             print("Choix invalide. Veuillez choisir entrer 1 ou 2.")
+    #     except ValueError:
+    #         print("Choix invalide. Veuillez entrer 1 ou 2 (en tant que nombre entier).")
+
+    # if (action == 1):
+    #     print("\n**************Bienvenue ! Je vais vous aider à chiffrer votre message**************\n")
+    #     plaintext = input("Quel est votre message (8 bits): ")
+    #     plaintext_useable = bitarray(plaintext)
+    #     print("\nVotre message est : ", plaintext_useable)
+    #     a = encryption.fonktionFk(plaintext_useable, subkey1)
+    #     # print("les 4 bits les plus à gauche : ", a)
+    #     b = encryption.switch(a)
+    #     # print("le switch donne : ", b)
+    #     c = bitarray(b[0] + b[1])
+    #     # print("prêt à envoyer : ", c)
+    #     d = encryption.fonktionFk(c, subkey2)
+    #     # print("la deuxième application donne : ", d)
+    #     # on converti le resultat en un seul bit array
+    #     e = bitarray(d[0] + d[1])
+    #     # on fait une permutation finale sur d
+    #     message = encryption.final_permutationIP(e)
+    #     print("Croyez-y et laissez la magie opèrer...")
+    #     time.sleep(2)
+    #     print("Bim bam boum ! voici le message chiffrer : ", message)
+    # else:
+    #     print("\n**************Bienvenue ! Je vais vous aider à déchiffrer votre message**************\n")
+    #     plaintext = input("Quel est le message chiffré (8 bits): ")
+    #     plaintext_useable = bitarray(plaintext)
+    #     print("Le code de déchiffrement n'est malheureusement pas encore prêt ! veuillez réessayer plus tard ! Merci")
