@@ -27,9 +27,19 @@ import time
 # ----------------------------------------------------
 #		Zone de déclaration des variables globales
 # ----------------------------------------------------
-subkey1 = bitarray()
-subkey2 = bitarray()
+# subkey1 = bitarray()
+# subkey2 = bitarray()
 
+# Tables de permutation initiale et inverse
+permutation_initiale = [2, 6, 3, 1, 4, 8, 5, 7] #IP
+permutation_inverse = [4, 1, 3, 5, 7, 2, 8, 6] #IP^-1
+
+# Tables de permutation P10 et P8
+permutation_p10 = [3, 5, 2, 7, 4, 10, 1, 9, 8, 6] #P10
+permutation_p8 = [6, 3, 7, 4, 8, 5, 10, 9] #P8
+
+#Tables de permutation 
+permutation_E_P = [4, 1, 2, 3, 2, 3, 4, 1]#Expansion/Permutation
 
 # -------------------------------------------------------
 #		Zone de déclaration des modules ou des fonctions
@@ -38,27 +48,28 @@ subkey2 = bitarray()
 avec les 5 premiers et les 5 derniers bits
 --> J'ai également modifié la fonction pour qu'elle renvoie directement des instances de bitarray 
 en convertissant les tranches bitarray1 et bitarray2. Cela améliore la lisibilité du code et garantit que les sorties sont bien des bitarray.'''
-def split_bitarray(key):
-    n = len(key)
+def split_bitarray(data):
+    n = len(data)
 
     if n % 2 != 0:
         raise ValueError("La taille du bitarray doit être un multiple de 2.")
 
-    milieu = n // 2
-    bitarray1 = key[:milieu]
-    bitarray2 = key[milieu:]
+    middle = n // 2
+    left = data[:middle]
+    right = data[middle:]
 
-    return bitarray(bitarray1), bitarray(bitarray2)
+    return bitarray(left), bitarray(right)
+
+
 
 '''Première permutation de la clé de 10 bits généré. Chaque chiffre dans le tableau donne la position du bit à récupérer
 et l'indice de ce chiffre dans le tableau indique la position du bit après permutation
 
 --> on peut utiliser une approche plus concise en utilisant une compréhension de liste et en évitant la boucle for'''
 
-def permute_key(key):
-    permutation_seq = [2, 4, 1, 6, 3, 9, 0, 8, 7, 5]
-    bit_permutter = bitarray(key[i] for i in permutation_seq)
-    return bit_permutter
+# def permute_key(key):
+#     bit_permutter = bitarray(key[i - 1] for i in permutation_p10)
+#     return bit_permutter
 
 
 '''Après permutation on effectue un décalage gauche de 1 séparement : sur les premiers 5 bits
@@ -67,7 +78,7 @@ et sur les derniers 5 bits
 rotate des bitarrays de la bibliothèque bitarray pour simplifier le code.'''
 
 
-def l_circular_shift(key_tuple):
+def l_circular_shift(key_tuple, n=1):
     '''Explication du principe du left circular shift
     Pour effectuer un décalage circulaire vers la gauche d'un nombre binaire 10000 de manière à obtenir 00001,
     on doit décaler de 1 position vers la gauche. Voici comment cela fonctionne :
@@ -77,69 +88,76 @@ def l_circular_shift(key_tuple):
         4- On reinsère ce bit à droit de la sequence
         --> elle est optimisée en termes de lisibilité, de simplicité et de conformité avec la bibliothèque bitarray
     '''
-    part1, part2 = key_tuple
+    try:
+        key_tuple = split_bitarray(key_tuple)
+        part1, part2 = key_tuple
+    except:
+        part1, part2 = key_tuple
 
-    # Effectuer le décalage circulaire vers la gauche d'une position
-    bit1 = part1.pop(0)  # Supprimez le premier bit de part1
-    bit2 = part2.pop(0)  # Supprimez le premier bit de part2
+    # Effectuer le décalage circulaire vers la gauche de deux positions
+    result_part1 = part1[n:] + part1[:n]
+    result_part2 = part2[n:] + part2[:n]
+    result = result_part1 + result_part2
 
-    part1.append(bit1)  # Ajoutez le bit supprimé à la fin de part1
-    part2.append(bit2)  # Ajoutez le bit supprimé à la fin de part2
-
-    result = part1 + part2
-    # result_part1 = part1 << 1 #ici normalement on doit utilisé le symbole de decalage mais quand je l'utilise
-    # j'obtiens vite un set de 0. On a l'impression python fais mal le décalage
-    # result_part2 = part2 << 1
     return result
 
 
 '''On refait ensuite une nouvelle permutation appelé P8 qui sélectionne et permute 8 bits
 sur les 10 renvoyé précedemment. Le résultat renvoyé est la clé 1
---> nous utilisons une compréhension de liste pour créer bit_permutter en utilisant la séquence de permutation permutation_seq. 
+--> nous utilisons une compréhension de liste pour créer bit_permutter en utilisant la séquence de permutation permutation_p8. 
 Cela simplifie le code tout en maintenant la même fonctionnalité que la version précédente'''
 
 
-def permute_keyP8(key):
-    permutation_seq = [5, 2, 6, 3, 7, 4, 9, 8]
-    bit_permutter = bitarray(key[i] for i in permutation_seq)
-    return bit_permutter
+# def permute_keyP8(key):
+#     bit_permutter = bitarray(key[i - 1] for i in permutation_p8)
+#     return bit_permutter
 
 
-def l_circular_shift2(key):
-    '''Explication du principe du left circular shift
-    Pour effectuer un décalage circulaire vers la gauche d'un nombre binaire 10000 de manière à obtenir 00001,
-    on doit décaler de 2 position vers la gauche. Voici comment cela fonctionne :
-        1- on a la sequence binaire 10000
-        2- on effectue le décalage circulaire de 2 position
-        3- le bit decalé est 10
-        4- On reinsère ce bit à droit de la sequence et on a 00010
-    '''
-    key_tuple = split_bitarray(key)
-    part1, part2 = key_tuple
-    # Effectuer le décalage circulaire vers la gauche de deux positions
-    result_part1 = part1[2:] + part1[:2]
-    result_part2 = part2[2:] + part2[:2]
-    result = result_part1 + result_part2
-    return result
+'''Explication du principe du left circular shift
+Pour effectuer un décalage circulaire vers la gauche d'un nombre binaire 10000 de manière à obtenir 00001,
+on doit décaler de 2 position vers la gauche. Voici comment cela fonctionne :
+    1- on a la sequence binaire 10000
+    2- on effectue le décalage circulaire de 2 position
+    3- le bit decalé est 10
+    4- On reinsère ce bit à droit de la sequence et on a 00010
+'''
+# def l_circular_shift2(key):
+#     key_tuple = split_bitarray(key)
+#     part1, part2 = key_tuple
+#     # Effectuer le décalage circulaire vers la gauche de deux positions
+#     result_part1 = part1[2:] + part1[:2]
+#     result_part2 = part2[2:] + part2[:2]
+#     result = result_part1 + result_part2
+#     return result
 
-# --------------------------------------------------------------------------------------
-def generate_key():
-    # Génère une clé aléatoire de 10 bits
-    bit_aleatoire = bitarray(''.join(str(random.randint(0, 1)) for _ in range(10)))
-    print("La clé de 10 bits aléatoires générées est : ", bit_aleatoire)
 
+
+def permutation(data, table):
+    return bitarray(data[i - 1] for i in table)
+
+
+def get_subkeys(key):
     # Effectue une permutation initiale
-    bit_permute = permute_key(bit_aleatoire)
+    bit_permute = permutation(key, permutation_p10) #Permutation P10
 
     # Effectue un décalage circulaire (rotation)
     first_last5_bit = split_bitarray(bit_permute)
     rotation1 = l_circular_shift(first_last5_bit)
 
     # Effectue une autre permutation pour obtenir la première sous-clé
-    key1 = permute_keyP8(rotation1)
+    subkey1 = permutation(rotation1, permutation_p8) #Permutation P8
 
     # Effectue un deuxième décalage circulaire pour obtenir la deuxième sous-clé
-    rotation2 = l_circular_shift2(rotation1)
-    key2 = permute_keyP8(rotation2)
+    rotation2 = l_circular_shift(rotation1, 2)
+    subkey2 = permutation(rotation2, permutation_p8) #Permutation P8
 
-    return (key1, key2)
+    return (subkey1, subkey2)
+
+
+# --------------------------------------------------------------------------------------
+def generate_key():
+    # Génère une clé aléatoire de 10 bits
+    bit_aleatoire = bitarray("1010000010")
+    print("La clé de 10 bits aléatoires générées est : ", bit_aleatoire)
+
+    return get_subkeys(bit_aleatoire)
