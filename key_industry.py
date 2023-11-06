@@ -27,8 +27,6 @@ import time
 # ----------------------------------------------------
 #		Zone de déclaration des variables globales
 # ----------------------------------------------------
-# subkey1 = bitarray()
-# subkey2 = bitarray()
 
 # Tables de permutation initiale et inverse
 permutation_initiale = [2, 6, 3, 1, 4, 8, 5, 7] #IP
@@ -61,17 +59,6 @@ def split_bitarray(data):
     return bitarray(left), bitarray(right)
 
 
-
-'''Première permutation de la clé de 10 bits généré. Chaque chiffre dans le tableau donne la position du bit à récupérer
-et l'indice de ce chiffre dans le tableau indique la position du bit après permutation
-
---> on peut utiliser une approche plus concise en utilisant une compréhension de liste et en évitant la boucle for'''
-
-# def permute_key(key):
-#     bit_permutter = bitarray(key[i - 1] for i in permutation_p10)
-#     return bit_permutter
-
-
 '''Après permutation on effectue un décalage gauche de 1 séparement : sur les premiers 5 bits
 et sur les derniers 5 bits
 ---> implémentation actuelle est correcte, mais elle peut être améliorée en utilisant la méthode 
@@ -100,36 +87,6 @@ def l_circular_shift(key_tuple, n=1):
     result = result_part1 + result_part2
 
     return result
-
-
-'''On refait ensuite une nouvelle permutation appelé P8 qui sélectionne et permute 8 bits
-sur les 10 renvoyé précedemment. Le résultat renvoyé est la clé 1
---> nous utilisons une compréhension de liste pour créer bit_permutter en utilisant la séquence de permutation permutation_p8. 
-Cela simplifie le code tout en maintenant la même fonctionnalité que la version précédente'''
-
-
-# def permute_keyP8(key):
-#     bit_permutter = bitarray(key[i - 1] for i in permutation_p8)
-#     return bit_permutter
-
-
-'''Explication du principe du left circular shift
-Pour effectuer un décalage circulaire vers la gauche d'un nombre binaire 10000 de manière à obtenir 00001,
-on doit décaler de 2 position vers la gauche. Voici comment cela fonctionne :
-    1- on a la sequence binaire 10000
-    2- on effectue le décalage circulaire de 2 position
-    3- le bit decalé est 10
-    4- On reinsère ce bit à droit de la sequence et on a 00010
-'''
-# def l_circular_shift2(key):
-#     key_tuple = split_bitarray(key)
-#     part1, part2 = key_tuple
-#     # Effectuer le décalage circulaire vers la gauche de deux positions
-#     result_part1 = part1[2:] + part1[:2]
-#     result_part2 = part2[2:] + part2[:2]
-#     result = result_part1 + result_part2
-#     return result
-
 
 
 def permutation(data, table):
