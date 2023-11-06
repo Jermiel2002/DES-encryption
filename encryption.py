@@ -140,19 +140,19 @@ def encryption(data, key):
 
 def decryption(data, key):
     # Étape de permutation initiale
-    data = key_industry.permutation(data, key_industry.permutation_inverse)
+    data = key_industry.permutation(data, key_industry.permutation_initiale)
 
     # Récupération des sous clés générées à partir de la clé initiale de 10 bits
     subkey1, subkey2 = key_industry.get_subkeys(key)
     # print("La donnée sortie de IP", data)
     
-    a = fonktionFk(data, subkey1)
+    a = fonktionFk(data, subkey2)
     # print("La donnée après le premier fonktionFk : ", a)
     b = switch(a)
     # print("La donnée après switch : ", b)
-    c = fonktionFk(b, subkey2)
+    c = fonktionFk(b, subkey1)
     # print("La donnée après la deuxième fonktionFk : ", c)
-    message  = key_industry.permutation(c, key_industry.permutation_initiale)
+    message  = key_industry.permutation(c, key_industry.permutation_inverse)
     # print("La donnée après permutation inverse (permutation finale) : ", message)
 
     return message
