@@ -21,7 +21,6 @@ source : https://www.youtube.com/watch?v=nynAQ593HdU&list=PLBlnK6fEyqRiOCCDSdi6O
 #		    Zone des 'imports' de modules
 # -----------------------------------------------
 from bitarray import bitarray
-import time
 import key_industry
 # ----------------------------------------------------
 #		Zone de déclaration des variables globales
@@ -156,31 +155,3 @@ def decryption(data, key):
     # print("La donnée après permutation inverse (permutation finale) : ", message)
 
     return message
-
-
-# -------------------------------------------------------
-#						Appel fonctions
-# -------------------------------------------------------
-
-if __name__ == "__main__":
-
-    print("\n\n--------------------Bienvenue dans l'univers du chiffrement SDES--------------------\n")
-
-    bit_aleatoire = bitarray("1010000010")
-
-    plaintext = input("Quel est votre message (8 bits): ")
-    print("\nVotre message est : ", plaintext)
-
-    message = bitarray(plaintext)
-
-    message_chiffré = encryption(message, bit_aleatoire)
-
-    print("\nCroyez-y et laissez la magie opérer...")
-    time.sleep(5)
-    print("\nBim bam boum ! voici le message chiffré : ", message_chiffré.to01())
-
-    message_dechiffré = decryption(message_chiffré, bit_aleatoire)
-
-    time.sleep(5)
-
-    print("\nBim bam boum ! voici le message déchiffré : ", message_dechiffré.to01())

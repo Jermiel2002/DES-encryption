@@ -21,8 +21,6 @@ source : https://www.youtube.com/watch?v=nynAQ593HdU&list=PLBlnK6fEyqRiOCCDSdi6O
 #		    Zone des 'imports' de modules
 # -----------------------------------------------
 from bitarray import bitarray
-import random
-import time
 
 # ----------------------------------------------------
 #		Zone de déclaration des variables globales
